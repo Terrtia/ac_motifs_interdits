@@ -22,6 +22,9 @@ public class Motifs_Interdits {
 		conversion(s);
 		remplirContrainte();
 		
+		//printGraph();
+		//System.out.println('\n');
+		//printContraintes2();
 		
 		if (coloriable()){
 			System.out.println("Graphe de taille " + t + " coloriable");
@@ -29,9 +32,8 @@ public class Motifs_Interdits {
 			System.out.println("Graphe " + t + " non coloriable");
 		}
 		
-		
-		//printGraph();
-		
+		//System.out.println('\n');
+		//printContraintes2();
 	}
 
 	/**
@@ -72,13 +74,15 @@ public class Motifs_Interdits {
 	private boolean coloriable(){
 		double nb = 10 * (Math.pow(2, t/2));
 		
+		/*
 		for (int i = 0; i < nb; i++){
 			if (!randomColoriable()){
 				return false;
 			}
 		}
+		*/
 		
-		return true;
+		return randomColoriable();
 	}
 	
 	/**
@@ -93,6 +97,8 @@ public class Motifs_Interdits {
 			return false;	
 		
 		while (ali.size() > 0){
+			
+			//printUnaire();
 			
 			if (!rechercheVariable2ContraintesUnaires(ali)){
 				if (!rechercheVariable1ContrainteUnaire(ali)){
@@ -460,6 +466,32 @@ public class Motifs_Interdits {
 		}
 	}
 	
+	private void printContraintes2(){
+		int m = 0;
+		
+		for (int i = 0; i < t; i++){
+			for (int j = 0; j < t; j++){
+				for (int k1 = 0; k1 < 3; k1++){
+					for (int k2 = 0; k2 < 3; k2++){
+						if (contrainte[i][j][k1][k2])
+							m = 1;
+					}
+				}
+				System.out.print(m + "");
+				m = 0;
+			}
+			System.out.print("\n");
+		}
+	}
+	
+	private void printUnaire(){
+		for (int i = 0; i < t; i++){
+			System.out.print(i + "\t" + unaire[i][0] + "\t" + unaire[i][1] + "\t" + unaire[i][2] + "\n");
+		}
+		
+		System.out.println();
+	}
+	
 	public static void main(String[] args) {
 		
 		String s30_1 	= "011011110011101101100111010011100111101101001010011101111111100111101101011010011101111111011011100011101101100111010011111100001110110111111010101100111100001110110111111000101100111100011110110111111010101100100000101101011010011101111111011011110011101100100111010011011011110011001111100111010011100111101101011010011100111111111100011110110111111010101100100111101001011010011101111111001011110011101101100111010011111100011110110111111000101100100111101101011010011101011111011011110111101101100111010011100111100101011010011101111111100111101101011010011101111111011011110011101101100101010011011011110011101101100101010011111100011110110111111010101100100110101101010010000101111111111100011100110111111010101100011011110011101001100111010011111100011110110111111010101100011011110011101101100111010011011011110011101101100111010011111100011110110111111010101100111100011110110111111010101100";
@@ -494,7 +526,7 @@ public class Motifs_Interdits {
 		ss[12] = s200_1;
 		ss[13] = s200_2;
 		
-		for(int i = 0; i < 14; i++)
+		for(int i = 0; i < 1; i++)
 			new Motifs_Interdits(ss[i]);
 
 	}
