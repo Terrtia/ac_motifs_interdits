@@ -24,7 +24,7 @@ public class Motifs_Interdits {
 		
 		//printGraph();
 		//System.out.println('\n');
-		//printContraintes2();
+		//printContraintes();
 		
 		if (coloriable()){
 			System.out.println("Graphe de taille " + t + " coloriable");
@@ -33,7 +33,7 @@ public class Motifs_Interdits {
 		}
 		
 		//System.out.println('\n');
-		//printContraintes2();
+		//printContraintes();
 	}
 
 	/**
@@ -74,13 +74,12 @@ public class Motifs_Interdits {
 	private boolean coloriable(){
 		double nb = 10 * (Math.pow(2, t/2));
 		
-		/*
 		for (int i = 0; i < nb; i++){
 			if (!randomColoriable()){
+				System.out.println(i);
 				return false;
 			}
 		}
-		*/
 		
 		return randomColoriable();
 	}
@@ -98,13 +97,14 @@ public class Motifs_Interdits {
 		
 		while (ali.size() > 0){
 			
-			//printUnaire();
-			
 			if (!rechercheVariable2ContraintesUnaires(ali)){
-				if (!rechercheVariable1ContrainteUnaire(ali)){
+				int res = rechercheVariable1ContrainteUnaire(ali);
+				if (res == 0){
 					if (!ajouter2ContraintesUnaires(ali)){
 						return false;
 					}
+				} else if (res == -1){
+					return false;
 				}
 			}
 		}
@@ -183,9 +183,10 @@ public class Motifs_Interdits {
 	/**
 	 * 
 	 * @param alint
-	 * @return retourne vrai si la recherche a trouve une variable concernee
+	 * @return retourne 1 si la recherche a trouve une variable concernee, 0 sinon, 
+	 * et retourne -1 si il y a contradiction (creation d'une 3eme contrainte unaire pour une meme variable)
 	 */
-	private boolean rechercheVariable1ContrainteUnaire(ArrayList<Integer[]> alint){
+	private int rechercheVariable1ContrainteUnaire(ArrayList<Integer[]> alint){
 		boolean trouve = false;
 		int i = 0;
 		
@@ -202,14 +203,16 @@ public class Motifs_Interdits {
 			for (int k = 0; k < 3; k++){
 				if (unaire[indice][k]){
 					elimContrainte(indice, k, alint);
-					creerCouplesContraintes(indice, k, alint);
+					if (!creerCouplesContraintes(indice, k, alint)){
+						return -1;
+					}
 				}
 			}
 			alint.remove(i - 1);
-			return true;
+			return 1;
 		}
 		
-		return false;
+		return 0;
 	}
 	
 
@@ -235,7 +238,7 @@ public class Motifs_Interdits {
 	 * @param indice
 	 * @param k
 	 */
-	private void creerCouplesContraintes(int indice, int couleur, ArrayList<Integer[]> alint) {
+	private boolean creerCouplesContraintes(int indice, int couleur, ArrayList<Integer[]> alint) {
 		/* identification des deux couleurs restantes */
 		int couleur1 = couleur1(couleur), couleur2 = couleur2(couleur);
 		
@@ -248,40 +251,45 @@ public class Motifs_Interdits {
 		for (Integer[] integ : alint){
 			int i = integ[0];
 			
-			for (int k = 0; k < 3; k++){
-				if (contrainte[indice][i][couleur1][k]){
-					Integer[] y = new Integer[2];
-					
-					y[0] = i;
-					y[1] = k;
-					
-					alintcouleur1.add(y);
-					
-					/* suppression de la contrainte contenant indice */
-					contrainte[indice][i][couleur1][k] = false;
-					contrainte[i][indice][k][couleur1] = false;
-					
-				} else if (contrainte[indice][i][couleur2][k]){
-					Integer[] z = new Integer[2];
-					
-					z[0] = i;
-					z[1] = k;
-					
-					alintcouleur2.add(z);
-					
-					/* suppression de la contrainte contenant indice */
-					contrainte[indice][i][couleur2][k] = false;
-					contrainte[i][indice][k][couleur2] = false;
+			if (i != indice){
+				
+				for (int k = 0; k < 3; k++){
+					if (contrainte[indice][i][couleur1][k]){
+						Integer[] y = new Integer[2];
+						
+						y[0] = i;
+						y[1] = k;
+						
+						alintcouleur1.add(y);
+						
+						/* suppression de la contrainte contenant indice */
+						contrainte[indice][i][couleur1][k] = false;
+						contrainte[i][indice][k][couleur1] = false;
+					}
+					if (contrainte[indice][i][couleur2][k]){
+						Integer[] z = new Integer[2];
+						
+						z[0] = i;
+						z[1] = k;
+						
+						alintcouleur2.add(z);
+						
+						/* suppression de la contrainte contenant indice */
+						contrainte[indice][i][couleur2][k] = false;
+						contrainte[i][indice][k][couleur2] = false;
+					}
 				}
 			}
 		}
 		
-		if (alintcouleur1.size() == alintcouleur2.size()){
-
-			/* creation des contraintes [(y,b),(z,c)] comme vu dans le sujet */
-			for (int j = 0; j < alintcouleur1.size(); j++){
-				Integer[] cY = alintcouleur1.get(j);
-				Integer[] cZ = alintcouleur2.get(j);
+		int j = 0;
+		int m = 0;
+		
+		while (j < alintcouleur1.size()){
+			Integer[] cY = alintcouleur1.get(j);
+			
+			while (m < alintcouleur2.size()){
+				Integer[] cZ = alintcouleur2.get(m);
 				
 				int y = cY[0];
 				int b = cY[1];
@@ -289,11 +297,24 @@ public class Motifs_Interdits {
 				int z = cZ[0];
 				int c = cZ[1];
 				
-				contrainte[y][z][b][c] = true;
-				contrainte[z][y][c][b] = true;
+				if ((z == y) && (c == b)){
+					if (cY[1] == 2) 
+						return false;
+					unaire[y][b] = true;
+					
+				} else if (y != z){
+					contrainte[y][z][b][c] = true;
+					contrainte[z][y][c][b] = true;
+				}
+				
+				m++;
 			}
+			
+			alintcouleur1.remove(j);
+			m = 0;
 		}
 		
+		return true;
 	}
 	
 	/**
@@ -385,12 +406,9 @@ public class Motifs_Interdits {
 					break;
 				}
 				
-				/**
-				 * 
-				 * BESOIN DE SUPPRIMER LA CONTRAINTE BINAIRE TROUVEE ?
-				 * 
-				 * 
-				 */
+				/* suppression de la contrainte binaire trouvée */
+				contrainte[indiceI][indiceJ][ki][kj] = false;
+				contrainte[indiceJ][indiceI][kj][ki] = false;
 				
 			} else { 
 				/* la variable à l'indice i n'a pas de contraintes, on la supprime */
@@ -492,7 +510,58 @@ public class Motifs_Interdits {
 		System.out.println();
 	}
 	
+	private void printEtat(ArrayList<Integer[]> ali){
+		
+		for(Integer[] integ : ali){
+			int x = integ[0];
+			int a = integ[1];
+			
+			
+			for(Integer[] integre : ali){
+				int y = integre[0];
+				int b = integre[1];
+			
+				if (x > y){
+					for(int k1 = 0; k1 < 3; k1++){
+						for(int k2 = 0; k2 < 3; k2++){
+							if (contrainte[x][y][k1][k2]){
+								System.out.println("[(" + x + "," + convertCouleur(k1) + "), (" + y + "," + convertCouleur(k2) + ")]");
+							}
+						}
+					}
+				}
+				
+			}
+		}
+		
+		for(Integer[] integ : ali){
+			int x = integ[0];
+			
+			for(int k1 = 0; k1 < 3; k1++){
+				if (unaire[x][k1]){
+					System.out.println("[(" + x + "," + convertCouleur(k1) + ")]");
+				}
+			}
+		}
+		
+	}
+	
+	private String convertCouleur(int k){
+		switch (k){
+		case 0:
+			return "R";
+		case 1:
+			return "G";
+		case 2:
+			return "B";
+		default:
+			return null;
+		}
+	}
+	
 	public static void main(String[] args) {
+		
+		String s4		= "0111101111011110";
 		
 		String s30_1 	= "011011110011101101100111010011100111101101001010011101111111100111101101011010011101111111011011100011101101100111010011111100001110110111111010101100111100001110110111111000101100111100011110110111111010101100100000101101011010011101111111011011110011101100100111010011011011110011001111100111010011100111101101011010011100111111111100011110110111111010101100100111101001011010011101111111001011110011101101100111010011111100011110110111111000101100100111101101011010011101011111011011110111101101100111010011100111100101011010011101111111100111101101011010011101111111011011110011101101100101010011011011110011101101100101010011111100011110110111111010101100100110101101010010000101111111111100011100110111111010101100011011110011101001100111010011111100011110110111111010101100011011110011101101100111010011011011110011101101100111010011111100011110110111111010101100111100011110110111111010101100";
 		String s30_2 	= "011011110011101101100111010011100111101101001010011101111111100111101101011010011101111111011011100011101101100111010011111100001110110111111010101100111100001110110111111000101100111100011110110111111010101100100000101101011010011101111111011011110011101100100111010011011011110011001101100111010011100111101101011010011100111111111100011110110111111010101100100111101001011010011101111111001011110011101101100111010011111100011110110111111000101100100111101101011010011101011111011011110011101101100111010011100111100101011010011101111111100111101101011010011101111111011011110011101101100101010011011011110011101101100101010011111100011110110111111010101100100110101101010010000101111111111100011100110111111010101100011011110011101001100111010011111100011110110111111010101100011011110011101101100111010011011011110011101101100111010011111100011110110111111010101100111100011110110111111010101100";
@@ -526,9 +595,12 @@ public class Motifs_Interdits {
 		ss[12] = s200_1;
 		ss[13] = s200_2;
 		
-		for(int i = 0; i < 1; i++)
+		for(int i = 0; i < 14; i++)
 			new Motifs_Interdits(ss[i]);
 
+		//new Motifs_Interdits(s4);
+			
+			
 	}
 
 }
