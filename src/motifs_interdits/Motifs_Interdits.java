@@ -1,7 +1,9 @@
 package motifs_interdits;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Random;
+import java.util.Timer;
 
 import jdk.nashorn.internal.runtime.arrays.ArrayLikeIterator;
 
@@ -11,6 +13,7 @@ public class Motifs_Interdits {
 	public boolean graph[][];
 	public boolean contrainte[][][][];
 	public boolean unaire[][];
+	public Random r;
 	
 	public Motifs_Interdits(String s) {
 		
@@ -18,19 +21,20 @@ public class Motifs_Interdits {
 		graph = new boolean[t][t];
 		contrainte = new boolean[t][t][3][3];
 		unaire = new boolean[t][3];
+		r = new Random();
+		
+		r.setSeed(System.currentTimeMillis());
 		
 		conversion(s);
 		remplirContrainte();
 		
+		
+		
 		//printGraph();
 		//System.out.println('\n');
 		//printContraintes();
-		
-		if (coloriable()){
-			System.out.println("Graphe de taille " + t + " coloriable");
-		} else {
-			System.out.println("Graphe " + t + " non coloriable");
-		}
+
+		System.out.println("Graphe de taille " + t + " coloriable " + coloriable() + "% du temps");
 		
 		//System.out.println('\n');
 		//printContraintes();
@@ -57,6 +61,8 @@ public class Motifs_Interdits {
 	 * remplit le tableau de contraintes pour formaliser la contrainte de colorabilitÃ© du graphe
 	 */
 	private void remplirContrainte(){
+		contrainte = new boolean[t][t][3][3];
+		
 		for (int i = 0; i < t; i++){
 			for (int j = 0; j < t; j++){
 				if (graph[i][j]){
@@ -68,20 +74,31 @@ public class Motifs_Interdits {
 	}
 	
 	/**
-	 * teste 10 * (2 ^ (n/2)) fois si le graphe est coloriable selon l'algorithme du sujet
-	 * @return colorabilitÃ© du graphe avec un taux d'echec de 0.005%
+	 * 
 	 */
-	private boolean coloriable(){
-		double nb = 10 * (Math.pow(2, t/2));
+	private void remplirUnaire(){
+		unaire = new boolean[t][3];
+	}
+	
+	/**
+	 * teste 10 * (2 ^ (n/2)) fois si le graphe est coloriable selon l'algorithme du sujet
+	 * @return colorabilitÃ© du graphe en pourcentage
+	 */
+	private double coloriable(){
+		double nb;
+		//nb = 10 * (Math.pow(2, t/2));
+		nb = 10 * t;
+		//nb = 1;
+		
+		int l = 0;
 		
 		for (int i = 0; i < nb; i++){
-			if (!randomColoriable()){
-				System.out.println(i);
-				return false;
+			if (randomColoriable()){
+				l++;
 			}
 		}
 		
-		return randomColoriable();
+		return ((l / nb) * 100);
 	}
 	
 	/**
@@ -90,20 +107,26 @@ public class Motifs_Interdits {
 	 */
 	private boolean randomColoriable(){		
 		
+		remplirContrainte();
+		remplirUnaire();
+		
 		ArrayList<Integer[]> ali = initArrayList();
 		
 		if (!calculNbContraintesUnaires(ali))
 			return false;	
 		
 		while (ali.size() > 0){
+			//System.out.println(t + " : iiir");
 			
 			if (!rechercheVariable2ContraintesUnaires(ali)){
 				int res = rechercheVariable1ContrainteUnaire(ali);
 				if (res == 0){
 					if (!ajouter2ContraintesUnaires(ali)){
+						//System.out.println("le cas 4 a crée une cU de trop");
 						return false;
 					}
 				} else if (res == -1){
+					//System.out.println("le cas 3 a crée une cU de trop");
 					return false;
 				}
 			}
@@ -383,8 +406,6 @@ public class Motifs_Interdits {
 				int ki1 = couleur1(ki), ki2 = couleur2(ki);
 				int kj1 = couleur1(kj), kj2 = couleur2(kj);
 				
-				Random r = new Random();
-				
 				int m = r.nextInt(4);
 				
 				switch (m){
@@ -559,6 +580,53 @@ public class Motifs_Interdits {
 		}
 	}
 	
+	public static String genereGrapheColoriable(int taille, Random ran){
+		StringBuilder sb = new StringBuilder();
+		int[][] matrice = new int[taille][taille];
+		int[] voisins = new int[taille];
+		
+		int cpt = 0;
+		
+		for (int i = 0; i < taille; i++){
+			for (int j = 0; j < taille; j++){
+				if (i == j) 
+					matrice[i][j] = 0;
+				else
+					matrice[i][j] = -1;
+			}
+		}
+		
+		for (int i = 0; i < taille; i++){
+			for (int j = 0; j < taille; j++){
+				if ((matrice[i][j] == -1) && (voisins[i] < 2)){
+					if (ran.nextBoolean()){
+						matrice[i][j] = 1;
+						matrice[j][i] = 1;
+						voisins[i] = voisins[i] + 1;
+						voisins[j] = voisins[j] + 1;
+					} else {
+						matrice[i][j] = 0;
+						matrice[j][i] = 0;
+					}
+				} else if ((matrice[i][j] == -1)){
+					matrice[i][j] = 0;
+					matrice[j][i] = 0;
+				}
+			}
+		}
+		
+		for (int i = 0; i < taille; i++){
+			for (int j = 0; j < taille; j++){
+				//System.out.print(matrice[i][j]);
+				sb.append(matrice[i][j]);
+			}
+			//System.out.print("\n");
+		}
+		
+		
+		return sb.toString();
+	}
+	
 	public static void main(String[] args) {
 		
 		String s4		= "0111101111011110";
@@ -595,12 +663,37 @@ public class Motifs_Interdits {
 		ss[12] = s200_1;
 		ss[13] = s200_2;
 		
+		
 		for(int i = 0; i < 14; i++)
 			new Motifs_Interdits(ss[i]);
 
-		//new Motifs_Interdits(s4);
+		new Motifs_Interdits("0111101111011110");
+		new Motifs_Interdits("0110100110010110");
 			
-			
+		new Motifs_Interdits(""
+				+ "0011010000"
+				+ "0001101000"
+				+ "1000100100"
+				+ "1100000010"
+				+ "0110000001"
+				+ "1000001001"
+				+ "0100010100"
+				+ "0010001010"
+				+ "0001000101"
+				+ "0000110010");
+		
+		
+		
+		/*
+		Random r = new Random();
+		r.setSeed(System.currentTimeMillis());
+		
+		for (int j = 1; j < 201; j++){
+			new Motifs_Interdits(genereGrapheColoriable(j, r));
+		}
+		
+		//System.out.println(genereGrapheColoriable(200, r));
+			*/
 	}
 
 }
