@@ -27,17 +27,8 @@ public class Motifs_Interdits {
 		
 		conversion(s);
 		remplirContrainte();
-		
-		
-		
-		//printGraph();
-		//System.out.println('\n');
-		//printContraintes();
 
 		System.out.println("Graphe de taille " + t + " coloriable " + coloriable() + "% du temps");
-		
-		//System.out.println('\n');
-		//printContraintes();
 	}
 
 	/**
@@ -74,14 +65,14 @@ public class Motifs_Interdits {
 	}
 	
 	/**
-	 * 
+	 * cree un nouveau tableau de contraintes unaires
 	 */
 	private void remplirUnaire(){
 		unaire = new boolean[t][3];
 	}
 	
 	/**
-	 * teste 10 * (2 ^ (n/2)) fois si le graphe est coloriable selon l'algorithme du sujet
+	 * teste 10 * n fois si le graphe est coloriable selon l'algorithme du sujet
 	 * @return colorabilitÃ© du graphe en pourcentage
 	 */
 	private double coloriable(){
@@ -116,17 +107,14 @@ public class Motifs_Interdits {
 			return false;	
 		
 		while (ali.size() > 0){
-			//System.out.println(t + " : iiir");
 			
 			if (!rechercheVariable2ContraintesUnaires(ali)){
 				int res = rechercheVariable1ContrainteUnaire(ali);
 				if (res == 0){
 					if (!ajouter2ContraintesUnaires(ali)){
-						//System.out.println("le cas 4 a crée une cU de trop");
 						return false;
 					}
 				} else if (res == -1){
-					//System.out.println("le cas 3 a crée une cU de trop");
 					return false;
 				}
 			}
@@ -204,8 +192,8 @@ public class Motifs_Interdits {
 	}
 	
 	/**
-	 * 
-	 * @param alint
+	 * Etape 3 de l'algorithme
+	 * @param alint Arraylist de variables à prendre en compte
 	 * @return retourne 1 si la recherche a trouve une variable concernee, 0 sinon, 
 	 * et retourne -1 si il y a contradiction (creation d'une 3eme contrainte unaire pour une meme variable)
 	 */
@@ -240,9 +228,9 @@ public class Motifs_Interdits {
 	
 
 	/**
-	 * 
+	 * Elimine toutes les contraintes binaires de la forme [y, b],[indiceAEliminer,couleurAEliminer]
 	 * @param indiceAEliminer
-	 * @param k
+	 * @param couleurAEliminer
 	 */
 	private void elimContrainte(int indiceAEliminer, int couleurAEliminer, ArrayList<Integer[]> alint) {
 		for (Integer[] integ : alint){
@@ -257,9 +245,9 @@ public class Motifs_Interdits {
 	
 	
 	/**
-	 * 
+	 * Cree tout les couples contraintes possible à partir de la contrainte unaire de base 
 	 * @param indice
-	 * @param k
+	 * @param couleur
 	 */
 	private boolean creerCouplesContraintes(int indice, int couleur, ArrayList<Integer[]> alint) {
 		/* identification des deux couleurs restantes */
@@ -341,7 +329,8 @@ public class Motifs_Interdits {
 	}
 	
 	/**
-	 * 
+	 * Etape 4 de l'algorithme, cherche une contrainte binaire, crée aléatoirement 2 contraintes unaires
+	 * à partir de cette contrainte, et ensuite la supprime
 	 * @param ali
 	 * @return retourne false si une 3eme contrainte unaire a ete cree pour une meme variable : coloration impossible
 	 */
@@ -475,6 +464,10 @@ public class Motifs_Interdits {
 		return -1;
 	}
 	
+	
+	/**
+	 * affiche la matrice d'adjacence du graphe
+	 */
 	private void printGraph(){
 		for (int i = 0; i < t; i++){
 			for (int j = 0; j < t; j++){
@@ -487,6 +480,10 @@ public class Motifs_Interdits {
 		}
 	}
 	
+	
+	/**
+	 * affiche un tableau 2D avec les contraintes presentes dans le tableau contraintes
+	 */
 	private void printContraintes(){
 		for (int i = 0; i < t; i++){
 			for (int j = 0; j < t; j++){
@@ -505,6 +502,10 @@ public class Motifs_Interdits {
 		}
 	}
 	
+	
+	/**
+	 * affiche un tableau 2D avec un '1' dans tab[i][j] si il existe une contrainte binaire dans contrainte[i][j][k][m] pour tout k, pour tout m
+	 */
 	private void printContraintes2(){
 		int m = 0;
 		
@@ -523,6 +524,10 @@ public class Motifs_Interdits {
 		}
 	}
 	
+	
+	/**
+	 * affiche la liste des contraintes unaires
+	 */
 	private void printUnaire(){
 		for (int i = 0; i < t; i++){
 			System.out.print(i + "\t" + unaire[i][0] + "\t" + unaire[i][1] + "\t" + unaire[i][2] + "\n");
@@ -531,6 +536,11 @@ public class Motifs_Interdits {
 		System.out.println();
 	}
 	
+	
+	/**
+	 * affiche l'etat de l'algorithme : liste des contraintes binaires, liste des contraintes unaires
+	 * @param ali ArrayList des variables à pendre en compte
+	 */
 	private void printEtat(ArrayList<Integer[]> ali){
 		
 		for(Integer[] integ : ali){
@@ -567,6 +577,12 @@ public class Motifs_Interdits {
 		
 	}
 	
+	
+	/**
+	 * Converti un nombre désignant une couleur, en la lettre designant la couleur
+	 * @param k : 0 ou 1 ou 2
+	 * @return 'R' ou 'G' ou 'B'
+	 */
 	private String convertCouleur(int k){
 		switch (k){
 		case 0:
@@ -580,6 +596,13 @@ public class Motifs_Interdits {
 		}
 	}
 	
+	
+	/**
+	 * Genere un graphe aleatoire coloriable : chaque sommet à au maximum 2 voisins
+	 * @param taille : la taille souhaitee du graphe
+	 * @param ran : l'objet Random déjà initialisé pour mieux différencier les graphes
+	 * @return String representant la matrice d'adjacence du graphe
+	 */
 	public static String genereGrapheColoriable(int taille, Random ran){
 		StringBuilder sb = new StringBuilder();
 		int[][] matrice = new int[taille][taille];
@@ -617,19 +640,14 @@ public class Motifs_Interdits {
 		
 		for (int i = 0; i < taille; i++){
 			for (int j = 0; j < taille; j++){
-				//System.out.print(matrice[i][j]);
 				sb.append(matrice[i][j]);
 			}
-			//System.out.print("\n");
 		}
-		
 		
 		return sb.toString();
 	}
 	
 	public static void main(String[] args) {
-		
-		String s4		= "0111101111011110";
 		
 		String s30_1 	= "011011110011101101100111010011100111101101001010011101111111100111101101011010011101111111011011100011101101100111010011111100001110110111111010101100111100001110110111111000101100111100011110110111111010101100100000101101011010011101111111011011110011101100100111010011011011110011001111100111010011100111101101011010011100111111111100011110110111111010101100100111101001011010011101111111001011110011101101100111010011111100011110110111111000101100100111101101011010011101011111011011110111101101100111010011100111100101011010011101111111100111101101011010011101111111011011110011101101100101010011011011110011101101100101010011111100011110110111111010101100100110101101010010000101111111111100011100110111111010101100011011110011101001100111010011111100011110110111111010101100011011110011101101100111010011011011110011101101100111010011111100011110110111111010101100111100011110110111111010101100";
 		String s30_2 	= "011011110011101101100111010011100111101101001010011101111111100111101101011010011101111111011011100011101101100111010011111100001110110111111010101100111100001110110111111000101100111100011110110111111010101100100000101101011010011101111111011011110011101100100111010011011011110011001101100111010011100111101101011010011100111111111100011110110111111010101100100111101001011010011101111111001011110011101101100111010011111100011110110111111000101100100111101101011010011101011111011011110011101101100111010011100111100101011010011101111111100111101101011010011101111111011011110011101101100101010011011011110011101101100101010011111100011110110111111010101100100110101101010010000101111111111100011100110111111010101100011011110011101001100111010011111100011110110111111010101100011011110011101101100111010011011011110011101101100111010011111100011110110111111010101100111100011110110111111010101100";
@@ -663,10 +681,21 @@ public class Motifs_Interdits {
 		ss[12] = s200_1;
 		ss[13] = s200_2;
 		
-		
+		/**
+		 * Les lignes suivantes permettent de tester l'algorithme 10*n fois sur les 13 graphes donnés en exemple sur la page de cours
+		 * L'execution devient lente à partir de n >= 100
+		 */
+		/*
 		for(int i = 0; i < 14; i++)
 			new Motifs_Interdits(ss[i]);
-
+		*/
+		
+		/**
+		 * Les lignes suivantes permettent de tester l'algorithme 10*n fois sur : 
+		 * -un graphe de taille 4 incoloriable (tout les sommets sont reliés entre eux)
+		 * -un graphe de taille 4 coloriable
+		 * -un graphe de taille 10 coloriable (graphe de petersen)
+		 */
 		new Motifs_Interdits("0111101111011110");
 		new Motifs_Interdits("0110100110010110");
 			
@@ -683,7 +712,10 @@ public class Motifs_Interdits {
 				+ "0000110010");
 		
 		
-		
+		/**
+		 * Les lignes suivantes permettents d'executer l'algorithme 10*n fois sur des graphes coloriables de taille 1 <= n <= 200
+		 * L'execution devient lente à partir de n >= 75
+		 */
 		/*
 		Random r = new Random();
 		r.setSeed(System.currentTimeMillis());
@@ -691,9 +723,7 @@ public class Motifs_Interdits {
 		for (int j = 1; j < 201; j++){
 			new Motifs_Interdits(genereGrapheColoriable(j, r));
 		}
-		
-		//System.out.println(genereGrapheColoriable(200, r));
-			*/
+		*/
 	}
 
 }
